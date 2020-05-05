@@ -47,7 +47,7 @@ def loginProc(dv, username, password):
 
 
 # messaging procedure
-def messagingProcedure(dv, text):
+def messagingProcedure(dv, text, namesFile, currentnames):
     time.sleep(5)
     WebDriverWait(dv, 20).until(EC.visibility_of_all_elements_located)
 
@@ -59,34 +59,56 @@ def messagingProcedure(dv, text):
         WebDriverWait(dv, 20).until(EC.visibility_of_all_elements_located)
         time.sleep(5)
         
-        name = dv.find_element_by_class_name("_3cgd").text
-        time.sleep(5)
-
         try:
-            textInput = dv.find_element_by_xpath("/html/body/div[7]/div[2]/div/div/div/div/div/div/div/div[2]/div/div/div/div/div[2]/div/div[2]/div[1]/div/div[3]/div[1]/div/span/input")
-        except:                                   
-            textInput = dv.find_element_by_xpath("/html/body/div[5]/div[2]/div/div/div/div/div/div/div/div[2]/div/div/div/div/div[2]/div/div[2]/div[1]/div/div[3]/div[1]/div/span/input")
-
-        for i in range(19):
-                textInput.send_keys(Keys.BACKSPACE)
-        
-        for i in range(len(message)):
-            #time.sleep(0.1)
-            textInput.send_keys(message[i])
-        
-        textInput.send_keys(Keys.ENTER)
-        time.sleep(1)
-        
-        goBack = dv.find_element_by_xpath("/html/body")
-        try:
-            goBack.send_keys(Keys.ESCAPE)
-            time.sleep(1)
+            closeChat = dv.find_element_by_class_name("_7jbw _4vu4 button")
         except:
             None
         
-        goBack.send_keys(Keys.ESCAPE)
-        
-        time.sleep(2)
+        name = dv.find_element_by_class_name("_3cgd").text
+        name = str(name.encode("utf8"))
+        if not name in currentnames:
+            currentnames.append(name)
+            namesFile.write(name + "\n")
+            
+            time.sleep(3)
+
+            i = 0
+            while True:
+                i += 1
+                try:
+                    xpath = "/html/body/div[" + str(i) + "]/div[2]/div/div/div/div/div/div/div/div[2]/div/div/div/div/div[2]/div/div[2]/div[1]/div/div[3]/div[1]/div/span/input"
+                    print(xpath)
+                    textInput = dv.find_element_by_xpath(xpath)
+                    break
+                except:
+                    pass
+
+            for i in range(19):
+                    textInput.send_keys(Keys.BACKSPACE)
+            
+            for i in range(len(message)):
+                #time.sleep(0.1)
+                textInput.send_keys(message[i])
+            
+            textInput.send_keys(Keys.ENTER)
+            time.sleep(1)
+            
+            goBack = dv.find_element_by_xpath("/html/body")
+            goBack.send_keys(Keys.ESCAPE)
+            
+            time.sleep(2)
+            try:
+                goBack.send_keys(Keys.ESCAPE)
+                time.sleep(2)
+            except:
+                None
+        else:
+            goBack = dv.find_element_by_xpath("/html/body")
+            try:
+                goBack.send_keys(Keys.ESCAPE)
+                time.sleep(2)
+            except:
+                None
         
     
 # main function 
@@ -107,7 +129,11 @@ if __name__ == "__main__":
     loginProc(dv, email, password)
 
     with open("names.txt", "r") as namesFile:
-        credentials = namesFile.read().splitlines()
+        currentnames = namesFile.read().splitlines()
         namesFile.close()
         
-    messagingProcedure(dv, message)
+    with open("names.txt", "a") as namesFile:
+        messagingProcedure(dv, message, namesFile, currentnames)
+        namesFile.close()
+        
+    killb(dv)
