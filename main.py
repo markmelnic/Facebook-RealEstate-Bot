@@ -17,7 +17,7 @@ def boot():
     chrome_options.add_experimental_option("prefs",prefs)
 
     # driver itself
-    dv = webdriver.Chrome(chrome_options = chrome_options, executable_path = r"C:\Users\markh\OneDrive\Documents\vscode projx\Facebook-RealEstate-Bot\chromedriver81.exe")
+    dv = webdriver.Chrome(chrome_options = chrome_options, executable_path = r"./chromedriver81.exe")
     return dv
 
 # kill the driver
@@ -26,7 +26,7 @@ def killb(dv):
     
 # login protocol
 def loginProc(dv, username, password):
-    dv.get("https://www.facebook.com/marketplace/propertyforsale/")
+    dv.get("https://www.facebook.com/marketplace/category/propertyrentals/")
 
     # username
     loginUsername = dv.find_element_by_name("email")
@@ -50,7 +50,10 @@ def loginProc(dv, username, password):
 def messagingProcedure(dv, text, namesFile, currentnames):
     time.sleep(5)
     WebDriverWait(dv, 20).until(EC.visibility_of_all_elements_located)
-
+    
+    print("You have 15 seconds to adjust location etc...")
+    time.sleep(15)
+    
     listings = dv.find_elements_by_class_name("_1oem")
     print(listings)
     
@@ -60,55 +63,71 @@ def messagingProcedure(dv, text, namesFile, currentnames):
         time.sleep(5)
         
         try:
-            closeChat = dv.find_element_by_class_name("_7jbw _4vu4 button")
+            print("Trying to close chat")
+            closeChat = dv.find_element_by_class_name("close")
+            closeChat.click()
         except:
             None
         
-        name = dv.find_element_by_class_name("_3cgd").text
-        name = str(name.encode("utf8"))
-        if not name in currentnames:
-            currentnames.append(name)
-            namesFile.write(name + "\n")
-            
-            time.sleep(3)
+        try:
+            name = dv.find_element_by_class_name("_3cgd").text
+            name = str(name.encode("utf8"))
+            if not name in currentnames:
+                currentnames.append(name)
+                namesFile.write(name + "\n")
+                
+                time.sleep(3)
 
-            i = 0
-            while True:
-                i += 1
+                i = 0
+                while i < 100:
+                    i += 1
+                    try:
+                        xpath = "/html/body/div[" + str(i) + "]/div[2]/div/div/div/div/div/div/div/div[2]/div/div/div/div/div[2]/div/div[2]/div[1]/div/div[3]/div[1]/div/span/input"
+                        print(xpath)
+                        
+                        textInput = dv.find_element_by_xpath(xpath)
+                        break
+                    except:
+                        pass
+
+                for i in range(19):
+                        textInput.send_keys(Keys.BACKSPACE)
+                
+                for i in range(len(message)):
+                    #time.sleep(0.1)
+                    textInput.send_keys(message[i])
+                
+                textInput.send_keys(Keys.ENTER)
+                time.sleep(1)
+                
+                goBack = dv.find_element_by_xpath("/html/body")
+                goBack.send_keys(Keys.ESCAPE)
+                
+                time.sleep(2)
                 try:
-                    xpath = "/html/body/div[" + str(i) + "]/div[2]/div/div/div/div/div/div/div/div[2]/div/div/div/div/div[2]/div/div[2]/div[1]/div/div[3]/div[1]/div/span/input"
-                    print(xpath)
-                    textInput = dv.find_element_by_xpath(xpath)
-                    break
+                    goBack.send_keys(Keys.ESCAPE)
+                    time.sleep(2)
                 except:
-                    pass
-
-            for i in range(19):
-                    textInput.send_keys(Keys.BACKSPACE)
-            
-            for i in range(len(message)):
-                #time.sleep(0.1)
-                textInput.send_keys(message[i])
-            
-            textInput.send_keys(Keys.ENTER)
-            time.sleep(1)
-            
+                    None
+            else:
+                goBack = dv.find_element_by_xpath("/html/body")
+                try:
+                    goBack.send_keys(Keys.ESCAPE)
+                    time.sleep(2)
+                except:
+                    None
+        except:
+            print("Name not found")
             goBack = dv.find_element_by_xpath("/html/body")
+            try:
+                goBack.send_keys(Keys.ESCAPE)
+                time.sleep(2)
+            except:
+                None
             goBack.send_keys(Keys.ESCAPE)
-            
             time.sleep(2)
-            try:
-                goBack.send_keys(Keys.ESCAPE)
-                time.sleep(2)
-            except:
-                None
-        else:
-            goBack = dv.find_element_by_xpath("/html/body")
-            try:
-                goBack.send_keys(Keys.ESCAPE)
-                time.sleep(2)
-            except:
-                None
+            None
+            
         
     
 # main function 
@@ -127,7 +146,9 @@ if __name__ == "__main__":
     print(credentials)
 
     loginProc(dv, email, password)
-
+    print("You have 30 seconds in case login goes wrong.")
+    time.sleep(40)
+    
     with open("names.txt", "r") as namesFile:
         currentnames = namesFile.read().splitlines()
         namesFile.close()
@@ -135,5 +156,5 @@ if __name__ == "__main__":
     with open("names.txt", "a") as namesFile:
         messagingProcedure(dv, message, namesFile, currentnames)
         namesFile.close()
-        
+
     killb(dv)
