@@ -18,6 +18,7 @@ def boot():
 
     # driver itself
     dv = webdriver.Chrome(chrome_options = chrome_options, executable_path = r"./chromedriver81.exe")
+    dv.maximize_window()
     return dv
 
 # kill the driver
@@ -48,26 +49,26 @@ def loginProc(dv, username, password):
 
 # messaging procedure
 def messagingProcedure(dv, text, namesFile, currentnames):
-    time.sleep(5)
     WebDriverWait(dv, 20).until(EC.visibility_of_all_elements_located)
+    time.sleep(5)
     
     print("You have 15 seconds to adjust location etc...")
-    time.sleep(15)
-    
+    #time.sleep(15)
+
     listings = dv.find_elements_by_class_name("_1oem")
     print(listings)
     
     for listing in listings:
-        listing.click()
+        scrollDown = dv.find_element_by_xpath("/html/body")
+        while True:
+            try:
+                listing.click()
+                break
+            except:
+                scrollDown.send_keys(Keys.ARROW_DOWN)
         WebDriverWait(dv, 20).until(EC.visibility_of_all_elements_located)
         time.sleep(5)
-        
-        try:
-            print("Trying to close chat")
-            closeChat = dv.find_element_by_class_name("close")
-            closeChat.click()
-        except:
-            None
+
         
         try:
             name = dv.find_element_by_class_name("_3cgd").text
@@ -79,7 +80,7 @@ def messagingProcedure(dv, text, namesFile, currentnames):
                 time.sleep(3)
 
                 i = 0
-                while i < 100:
+                while i < 20:
                     i += 1
                     try:
                         xpath = "/html/body/div[" + str(i) + "]/div[2]/div/div/div/div/div/div/div/div[2]/div/div/div/div/div[2]/div/div[2]/div[1]/div/div[3]/div[1]/div/span/input"
@@ -147,7 +148,7 @@ if __name__ == "__main__":
 
     loginProc(dv, email, password)
     print("You have 30 seconds in case login goes wrong.")
-    time.sleep(40)
+    #time.sleep(40)
     
     with open("names.txt", "r") as namesFile:
         currentnames = namesFile.read().splitlines()
