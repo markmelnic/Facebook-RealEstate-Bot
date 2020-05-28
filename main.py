@@ -94,9 +94,10 @@ def messagingProcedure(dv, text, namesFile, currentnames):
                 for i in range(19):
                         textInput.send_keys(Keys.BACKSPACE)
                 
-                for i in range(len(message)):
+                msg = str(random.choice(message))
+                for i in range(len(msg)):
                     #time.sleep(0.1)
-                    textInput.send_keys(message[i])
+                    textInput.send_keys(msg[i])
                 
                 textInput.send_keys(Keys.ENTER)
                 time.sleep(5)
@@ -135,9 +136,9 @@ def messagingProcedure(dv, text, namesFile, currentnames):
 if __name__ == "__main__":
         
     with open("message.txt", "r") as msgFile:
-        message = msgFile.read()
+        message = msgFile.read().splitlines()
     print(message)
-    
+    time.sleep(60)
     dv = boot()
     
     with open("login_credentials.txt", "r", newline = '') as credsFile:
