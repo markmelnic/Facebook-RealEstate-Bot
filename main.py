@@ -1,13 +1,13 @@
 
+import random, time, csv
+from bs4 import BeautifulSoup
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 import selenium.webdriver.chrome.options
-import random
-import time
-import csv
+
 
 # driver boot procedure
 def boot():
@@ -17,17 +17,17 @@ def boot():
     chrome_options.add_experimental_option("prefs",prefs)
 
     # driver itself
-    dv = webdriver.Chrome(chrome_options = chrome_options, executable_path = r"./chromedriver81.exe")
+    dv = webdriver.Chrome(chrome_options = chrome_options, executable_path = r"./chromedriver.exe")
     dv.maximize_window()
     return dv
 
 # kill the driver
 def killb(dv):
     dv.quit()
-    
+
 # login protocol
 def loginProc(dv, username, password):
-    dv.get("https://www.facebook.com/marketplace/category/propertyrentals/")
+    dv.get("https://www.facebook.com/login/")
 
     # username
     loginUsername = dv.find_element_by_name("email")
@@ -43,33 +43,41 @@ def loginProc(dv, username, password):
         loginPassword.send_keys(password[i])
 
     # sign in
-    signInClick = dv.find_element_by_xpath("/html/body/div[1]/div[2]/div/div/div/div/div[2]/form/table/tbody/tr[2]/td[3]/label/input")
+    signInClick = dv.find_element_by_name("login")
     signInClick.click()
 
 
 # messaging procedure
 def messagingProcedure(dv, text, namesFile, currentnames):
+    time.sleep(3)
+    dv.get("https://www.facebook.com/marketplace/category/propertyrentals/")
+
     WebDriverWait(dv, 20).until(EC.visibility_of_all_elements_located)
     time.sleep(5)
     
     print("You have 15 seconds to adjust location etc...")
-    time.sleep(15)
+    #time.sleep(15)
 
     listings = dv.find_elements_by_class_name("_1oem")
-    print(listings)
+    listings = dv.find_elements_by_tag_name("a")
     
     for listing in listings:
         scrollDown = dv.find_element_by_xpath("/html/body")
         while True:
             try:
-                listing.click()
+                if listing.get_attribute('role') == "link":
+                    if "/marketplace/item/" in listing.get_attribute('href'):
+                        listing.click()
+                    else:
+                        continue
+                else:
+                    continue
                 break
             except:
                 scrollDown.send_keys(Keys.ARROW_DOWN)
         WebDriverWait(dv, 20).until(EC.visibility_of_all_elements_located)
         time.sleep(5)
 
-        
         try:
             name = dv.find_element_by_class_name("_3cgd").text
             name = str(name.encode("utf8"))
@@ -92,7 +100,7 @@ def messagingProcedure(dv, text, namesFile, currentnames):
                         pass
 
                 for i in range(19):
-                        textInput.send_keys(Keys.BACKSPACE)
+                    textInput.send_keys(Keys.BACKSPACE)
                 
                 msg = str(random.choice(message))
                 for i in range(len(msg)):
@@ -119,7 +127,6 @@ def messagingProcedure(dv, text, namesFile, currentnames):
                 except:
                     None
         except:
-            print("Name not found")
             goBack = dv.find_element_by_xpath("/html/body")
             try:
                 goBack.send_keys(Keys.ESCAPE)
@@ -134,29 +141,32 @@ def messagingProcedure(dv, text, namesFile, currentnames):
     
 # main function 
 if __name__ == "__main__":
-        
-    with open("message.txt", "r") as msgFile:
-        message = msgFile.read().splitlines()
-    print(message)
-    time.sleep(60)
-    dv = boot()
-    
-    with open("login_credentials.txt", "r", newline = '') as credsFile:
-        credentials = credsFile.read().splitlines()
-        email = credentials[0]
-        password = credentials[1]
-    print(credentials)
 
-    loginProc(dv, email, password)
-    print("You have 30 seconds in case login goes wrong.")
-    time.sleep(30)
-    
-    with open("names.txt", "r") as namesFile:
-        currentnames = namesFile.read().splitlines()
-        namesFile.close()
-        
-    with open("names.txt", "a") as namesFile:
-        messagingProcedure(dv, message, namesFile, currentnames)
-        namesFile.close()
+    try:
+        with open("message.txt", "r") as msgFile:
+            message = msgFile.read().splitlines()
+        dv = boot()
 
-    killb(dv)
+        with open("login_credentials.txt", "r", newline = '') as credsFile:
+            credentials = credsFile.read().splitlines()
+            email = credentials[0]
+            password = credentials[1]
+
+        loginProc(dv, email, password)
+
+        try:
+            with open("names.txt", "r") as namesFile:
+                currentnames = namesFile.read().splitlines()
+                namesFile.close()
+        except:
+            with open("names.txt", "w") as namesFile:
+                currentnames = []
+                pass
+
+        with open("names.txt", "a") as namesFile:
+            messagingProcedure(dv, message, namesFile, currentnames)
+            namesFile.close()
+
+        killb(dv)
+    except KeyboardInterrupt:
+        killb(dv)
