@@ -1,4 +1,4 @@
-chromedriver81.exe
+*.exe
 message.txt
 names.csv
 login_credentials.txt
