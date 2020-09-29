@@ -29,7 +29,7 @@ def killb(dv):
     dv.quit()
 
 # login protocol
-def loginProc(dv, username, password):
+def login(dv, username, password):
     dv.get(LOGIN_LINK)
 
     # username
@@ -52,6 +52,8 @@ def loginProc(dv, username, password):
 
 # messaging procedure
 def messagingProcedure(dv, text, namesFile, currentnames):
+    current_window = dv.current_window_handle
+
     time.sleep(3)
     dv.get(MARKETPLACE_LINK)
 
@@ -63,40 +65,51 @@ def messagingProcedure(dv, text, namesFile, currentnames):
 
     soup = BeautifulSoup(dv.page_source, 'html.parser')
     listings = soup.find_all("a")
-    print(len(listings))
 
     page_body = dv.find_element_by_xpath("/html/body")
+
     for listing in listings:
-        if listing['role'] == "link" and "/marketplace/item/" in listing['href']:
-            dv.execute_script('window.open(arguments[0]);', listing['href'])
-            print(listing['href'])
-            #listing.click()
-        else:
-            continue
-        page_body.send_keys(Keys.ARROW_DOWN)
-        WebDriverWait(dv, 20).until(EC.visibility_of_all_elements_located)
-        time.sleep(5)
+        try:
+            if (listing['role'] == "link") and ("/marketplace/item/" in listing['href']):
+                dv.execute_script('window.open(arguments[0]);', MAIN_LINK + listing['href'])
+                new_window = [window for window in dv.window_handles if window != current_window][0]
+                dv.switch_to.window(new_window)
+                time.sleep(5)
+                try:
+                    contact_button = dv.find_element_by_xpath("/html/body/div[1]/div/div[1]/div[1]/div[3]/div/div/div[1]/div[1]/div[2]/div/div/div/div/div/div[2]/div/div[2]/div/div[2]/div/div/span/div/div[1]/div/span/span")
+                    dv.close()
+                    dv.switch_to.window(current_window)
+                    time.sleep(2)
+                    continue
+                except:
+                    pass
+                name = dv.find_element_by_xpath("/html/body/div[1]/div/div[1]/div[1]/div[3]/div/div/div[1]/div[1]/div[2]/div/div/div/div/div/div[2]/div/div[2]/div/div[1]/div[1]/div[11]/div/div[2]/div/div/div/div/div[2]/div/div/div/div[1]/span/span/div/div/div/span").text
+                name = str(name.encode("utf8"))
+                if not name in currentnames:
+                    currentnames.append(name)
+                    namesFile.write(name + "\n")
+                    time.sleep(1)
 
-        name = dv.find_element_by_class_name("_3cgd").text
-        name = str(name.encode("utf8"))
-        if not name in currentnames:
-            currentnames.append(name)
-            namesFile.write(name + "\n")
-            
-            time.sleep(3)
+                    message_input = dv.find_element_by_tag_name("textarea")
+                    for i in range(19):
+                        message_input.send_keys(Keys.BACKSPACE)
+                    
+                    msg = str(random.choice(message))
+                    for char in msg:
+                        message_input.send_keys(char)
+                    
+                    message_input.send_keys(Keys.ENTER)
+                    time.sleep(5)
 
-            textInput = dv.find_element_by_attribute("textarea")
+                    dv.close()
+                    dv.switch_to.window(current_window)
+            else:
+                #page_body.send_keys(Keys.ARROW_DOWN)
+                #WebDriverWait(dv, 20).until(EC.visibility_of_all_elements_located)
+                pass
+        except KeyError:
+            pass
 
-            for i in range(19):
-                textInput.send_keys(Keys.BACKSPACE)
-            
-            msg = str(random.choice(message))
-            for i in range(len(msg)):
-                #time.sleep(0.1)
-                textInput.send_keys(msg[i])
-            
-            textInput.send_keys(Keys.ENTER)
-            time.sleep(5)
 
 # main function 
 if __name__ == "__main__":
@@ -111,7 +124,7 @@ if __name__ == "__main__":
             email = credentials[0]
             password = credentials[1]
 
-        loginProc(dv, email, password)
+        login(dv, email, password)
 
         try:
             with open("names.txt", "r") as namesFile:
