@@ -8,6 +8,9 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 import selenium.webdriver.chrome.options
 
+MAIN_LINK = "https://www.facebook.com/"
+LOGIN_LINK = "https://www.facebook.com/login/"
+MARKETPLACE_LINK = "https://www.facebook.com/marketplace/category/propertyrentals/"
 
 # driver boot procedure
 def boot():
@@ -27,7 +30,7 @@ def killb(dv):
 
 # login protocol
 def loginProc(dv, username, password):
-    dv.get("https://www.facebook.com/login/")
+    dv.get(LOGIN_LINK)
 
     # username
     loginUsername = dv.find_element_by_name("email")
@@ -50,7 +53,7 @@ def loginProc(dv, username, password):
 # messaging procedure
 def messagingProcedure(dv, text, namesFile, currentnames):
     time.sleep(3)
-    dv.get("https://www.facebook.com/marketplace/category/propertyrentals/")
+    dv.get(MARKETPLACE_LINK)
 
     WebDriverWait(dv, 20).until(EC.visibility_of_all_elements_located)
     time.sleep(5)
@@ -58,87 +61,43 @@ def messagingProcedure(dv, text, namesFile, currentnames):
     print("You have 15 seconds to adjust location etc...")
     #time.sleep(15)
 
-    listings = dv.find_elements_by_class_name("_1oem")
-    listings = dv.find_elements_by_tag_name("a")
-    
+    soup = BeautifulSoup(dv.page_source, 'html.parser')
+    listings = soup.find_all("a")
+    print(len(listings))
+
+    page_body = dv.find_element_by_xpath("/html/body")
     for listing in listings:
-        scrollDown = dv.find_element_by_xpath("/html/body")
-        while True:
-            try:
-                if listing.get_attribute('role') == "link":
-                    if "/marketplace/item/" in listing.get_attribute('href'):
-                        listing.click()
-                    else:
-                        continue
-                else:
-                    continue
-                break
-            except:
-                scrollDown.send_keys(Keys.ARROW_DOWN)
+        if listing['role'] == "link" and "/marketplace/item/" in listing['href']:
+            dv.execute_script('window.open(arguments[0]);', listing['href'])
+            print(listing['href'])
+            #listing.click()
+        else:
+            continue
+        page_body.send_keys(Keys.ARROW_DOWN)
         WebDriverWait(dv, 20).until(EC.visibility_of_all_elements_located)
         time.sleep(5)
 
-        try:
-            name = dv.find_element_by_class_name("_3cgd").text
-            name = str(name.encode("utf8"))
-            if not name in currentnames:
-                currentnames.append(name)
-                namesFile.write(name + "\n")
-                
-                time.sleep(3)
-
-                i = 0
-                while i < 20:
-                    i += 1
-                    try:
-                        xpath = "/html/body/div[" + str(i) + "]/div[2]/div/div/div/div/div/div/div/div[2]/div/div/div/div/div[2]/div/div[2]/div[1]/div/div[3]/div[1]/div/span/input"
-                        print(xpath)
-                        
-                        textInput = dv.find_element_by_xpath(xpath)
-                        break
-                    except:
-                        pass
-
-                for i in range(19):
-                    textInput.send_keys(Keys.BACKSPACE)
-                
-                msg = str(random.choice(message))
-                for i in range(len(msg)):
-                    #time.sleep(0.1)
-                    textInput.send_keys(msg[i])
-                
-                textInput.send_keys(Keys.ENTER)
-                time.sleep(5)
-                
-                goBack = dv.find_element_by_xpath("/html/body")
-                goBack.send_keys(Keys.ESCAPE)
-                
-                time.sleep(2)
-                try:
-                    goBack.send_keys(Keys.ESCAPE)
-                    time.sleep(2)
-                except:
-                    None
-            else:
-                goBack = dv.find_element_by_xpath("/html/body")
-                try:
-                    goBack.send_keys(Keys.ESCAPE)
-                    time.sleep(2)
-                except:
-                    None
-        except:
-            goBack = dv.find_element_by_xpath("/html/body")
-            try:
-                goBack.send_keys(Keys.ESCAPE)
-                time.sleep(2)
-            except:
-                None
-            goBack.send_keys(Keys.ESCAPE)
-            time.sleep(2)
-            None
+        name = dv.find_element_by_class_name("_3cgd").text
+        name = str(name.encode("utf8"))
+        if not name in currentnames:
+            currentnames.append(name)
+            namesFile.write(name + "\n")
             
-        
-    
+            time.sleep(3)
+
+            textInput = dv.find_element_by_attribute("textarea")
+
+            for i in range(19):
+                textInput.send_keys(Keys.BACKSPACE)
+            
+            msg = str(random.choice(message))
+            for i in range(len(msg)):
+                #time.sleep(0.1)
+                textInput.send_keys(msg[i])
+            
+            textInput.send_keys(Keys.ENTER)
+            time.sleep(5)
+
 # main function 
 if __name__ == "__main__":
 
@@ -157,7 +116,6 @@ if __name__ == "__main__":
         try:
             with open("names.txt", "r") as namesFile:
                 currentnames = namesFile.read().splitlines()
-                namesFile.close()
         except:
             with open("names.txt", "w") as namesFile:
                 currentnames = []
@@ -165,7 +123,6 @@ if __name__ == "__main__":
 
         with open("names.txt", "a") as namesFile:
             messagingProcedure(dv, message, namesFile, currentnames)
-            namesFile.close()
 
         killb(dv)
     except KeyboardInterrupt:
