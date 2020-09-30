@@ -1,14 +1,18 @@
+import pynput.keyboard
+import pynput.mouse
+from pynput.mouse import Button
 
 import random, time, csv
 from bs4 import BeautifulSoup
 from selenium import webdriver
+import selenium.webdriver.chrome.options
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
-from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
-import selenium.webdriver.chrome.options
+from selenium.webdriver.common.action_chains import ActionChains
+from selenium.webdriver.support import expected_conditions as EC
 
-MAIN_LINK = "https://www.facebook.com/"
+MAIN_LINK = "https://www.facebook.com"
 LOGIN_LINK = "https://www.facebook.com/login/"
 MARKETPLACE_LINK = "https://www.facebook.com/marketplace/category/propertyrentals/"
 
@@ -51,7 +55,10 @@ def login(dv, username, password):
 
 
 # messaging procedure
-def messagingProcedure(dv, text, namesFile, currentnames):
+def messagingProcedure(dv, messages, email, namesFile, processed_links):
+    mouse = pynput.mouse.Controller()
+    keyboard = pynput.keyboard.Controller()
+
     current_window = dv.current_window_handle
 
     time.sleep(3)
@@ -69,73 +76,60 @@ def messagingProcedure(dv, text, namesFile, currentnames):
     page_body = dv.find_element_by_xpath("/html/body")
 
     for listing in listings:
-        try:
-            if (listing['role'] == "link") and ("/marketplace/item/" in listing['href']):
+        if (listing['role'] == "link") and ("/marketplace/item/" in listing['href']):
+            if not MAIN_LINK + listing['href'] in processed_links:
+                processed_links.append(MAIN_LINK + listing['href'])
+                namesFile.write(MAIN_LINK + listing['href'] + "\n")
                 dv.execute_script('window.open(arguments[0]);', MAIN_LINK + listing['href'])
                 new_window = [window for window in dv.window_handles if window != current_window][0]
                 dv.switch_to.window(new_window)
-                time.sleep(5)
-                try:
-                    contact_button = dv.find_element_by_xpath("/html/body/div[1]/div/div[1]/div[1]/div[3]/div/div/div[1]/div[1]/div[2]/div/div/div/div/div/div[2]/div/div[2]/div/div[2]/div/div/span/div/div[1]/div/span/span")
-                    dv.close()
-                    dv.switch_to.window(current_window)
-                    time.sleep(2)
-                    continue
-                except:
-                    pass
-                name = dv.find_element_by_xpath("/html/body/div[1]/div/div[1]/div[1]/div[3]/div/div/div[1]/div[1]/div[2]/div/div/div/div/div/div[2]/div/div[2]/div/div[1]/div[1]/div[11]/div/div[2]/div/div/div/div/div[2]/div/div/div/div[1]/span/span/div/div/div/span").text
-                name = str(name.encode("utf8"))
-                if not name in currentnames:
-                    currentnames.append(name)
-                    namesFile.write(name + "\n")
-                    time.sleep(1)
+                dv.implicitly_wait(5)
+                ct = dv.find_element_by_xpath("//*[@id=\"mount_0_0\"]/div/div[1]/div[1]/div[3]/div/div/div[1]/div[1]/div[2]/div/div/div/div/div/div[2]/div/div[2]/div/div[1]/div[1]/div[3]/div/div[1]")
+                ct.click()
+                time.sleep(2)
+                if ct.text == "Message":
+                    mouse.position = (950, 650)
+                    mouse.click(Button.left, 2)
+                    time.sleep(0.5)
+                    keyboard.type(random.choice(messages))
+                    dv.find_element_by_xpath("//*[@id=\"mount_0_0\"]/div/div[1]/div[1]/div[4]/div/div/div[1]/div/div[2]/div/div/div/div[4]/div[2]/div").click()
+                else:
+                    mouse.position = (950, 475)
+                    mouse.click(Button.left, 2)
+                    time.sleep(0.5)
+                    keyboard.type(email)
+                    mouse.position = (950, 650)
+                    mouse.click(Button.left, 2)
+                    time.sleep(0.5)
+                    keyboard.type(random.choice(messages))
+                    dv.find_element_by_xpath("//*[@id=\"mount_0_0\"]/div/div[1]/div[1]/div[4]/div/div/div[1]/div/div[2]/div/div/div/div[4]/div[2]/span/div").click()
 
-                    message_input = dv.find_element_by_tag_name("textarea")
-                    for i in range(19):
-                        message_input.send_keys(Keys.BACKSPACE)
-                    
-                    msg = str(random.choice(message))
-                    for char in msg:
-                        message_input.send_keys(char)
-                    
-                    message_input.send_keys(Keys.ENTER)
-                    time.sleep(5)
-
-                    dv.close()
-                    dv.switch_to.window(current_window)
-            else:
-                #page_body.send_keys(Keys.ARROW_DOWN)
-                #WebDriverWait(dv, 20).until(EC.visibility_of_all_elements_located)
-                pass
-        except KeyError:
+                time.sleep(2)
+                dv.close()
+                dv.switch_to.window(current_window)
+        else:
             pass
 
 
-# main function 
 if __name__ == "__main__":
-
     try:
         with open("message.txt", "r") as msgFile:
-            message = msgFile.read().splitlines()
+            messages = msgFile.read().splitlines()
         dv = boot()
 
         with open("login_credentials.txt", "r", newline = '') as credsFile:
             credentials = credsFile.read().splitlines()
-            email = credentials[0]
-            password = credentials[1]
-
-        login(dv, email, password)
+        login(dv, credentials[0], credentials[1])
 
         try:
-            with open("names.txt", "r") as namesFile:
-                currentnames = namesFile.read().splitlines()
+            with open("links.txt", "r") as links_file:
+                processed_links = links_file.read().splitlines()
         except:
-            with open("names.txt", "w") as namesFile:
-                currentnames = []
+            with open("links.txt", "w") as links_file:
+                processed_links = []
                 pass
-
-        with open("names.txt", "a") as namesFile:
-            messagingProcedure(dv, message, namesFile, currentnames)
+        with open("links.txt", "a") as links_file:
+            messagingProcedure(dv, messages, credentials[0], links_file, processed_links)
 
         killb(dv)
     except KeyboardInterrupt:
