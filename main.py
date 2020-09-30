@@ -66,15 +66,13 @@ def messagingProcedure(dv, messages, email, namesFile, processed_links):
 
     WebDriverWait(dv, 20).until(EC.visibility_of_all_elements_located)
     time.sleep(5)
-    
+    page_body = dv.find_element_by_xpath("/html/body")
+
     print("You have 15 seconds to adjust location etc...")
     #time.sleep(15)
 
     soup = BeautifulSoup(dv.page_source, 'html.parser')
     listings = soup.find_all("a")
-
-    page_body = dv.find_element_by_xpath("/html/body")
-
     for listing in listings:
         if (listing['role'] == "link") and ("/marketplace/item/" in listing['href']):
             if not MAIN_LINK + listing['href'] in processed_links:
@@ -104,7 +102,7 @@ def messagingProcedure(dv, messages, email, namesFile, processed_links):
                     keyboard.type(random.choice(messages))
                     dv.find_element_by_xpath("//*[@id=\"mount_0_0\"]/div/div[1]/div[1]/div[4]/div/div/div[1]/div/div[2]/div/div/div/div[4]/div[2]/span/div").click()
 
-                time.sleep(2)
+                time.sleep(5)
                 dv.close()
                 dv.switch_to.window(current_window)
         else:
