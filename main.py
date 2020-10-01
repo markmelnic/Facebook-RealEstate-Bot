@@ -37,21 +37,17 @@ def login(dv, username, password):
     dv.get(LOGIN_LINK)
 
     # username
-    loginUsername = dv.find_element_by_name("email")
-
-    for i in range(len(username)):
-        #time.sleep(0.1)
-        loginUsername.send_keys(username[i])
+    username = dv.find_element_by_name("email")
+    for char in username:
+        username.send_keys(char)
 
     # password
-    loginPassword = dv.find_element_by_name("pass")
-    for i in range(len(password)):
-        #time.sleep(0.1)
-        loginPassword.send_keys(password[i])
+    password = dv.find_element_by_name("pass")
+    for char in password:
+        password.send_keys(char)
 
     # sign in
-    signInClick = dv.find_element_by_name("login")
-    signInClick.click()
+    dv.find_element_by_name("login").click()
 
 
 # messaging procedure
