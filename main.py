@@ -55,7 +55,7 @@ def login(dv, username, password):
 
 
 # messaging procedure
-def messagingProcedure(dv, messages, email, namesFile, processed_links):
+def messagingProcedure(dv, messages, email, phone, namesFile, processed_links):
     mouse = pynput.mouse.Controller()
     keyboard = pynput.keyboard.Controller()
 
@@ -67,8 +67,8 @@ def messagingProcedure(dv, messages, email, namesFile, processed_links):
     WebDriverWait(dv, 20).until(EC.visibility_of_all_elements_located)
     time.sleep(5)
 
-    print("You have 15 seconds to adjust settings")
-    time.sleep(15)
+    print("You have 60 seconds to adjust settings")
+    time.sleep(60)
 
     while True:
         page_body = dv.find_element_by_xpath("/html/body")
@@ -78,35 +78,47 @@ def messagingProcedure(dv, messages, email, namesFile, processed_links):
         for listing in listings:
             if (listing['role'] == "link") and ("/marketplace/item/" in listing['href']):
                 if not MAIN_LINK + listing['href'] in processed_links:
-                    processed_links.append(MAIN_LINK + listing['href'])
-                    namesFile.write(MAIN_LINK + listing['href'] + "\n")
-                    dv.execute_script('window.open(arguments[0]);', MAIN_LINK + listing['href'])
-                    new_window = [window for window in dv.window_handles if window != current_window][0]
-                    dv.switch_to.window(new_window)
-                    dv.implicitly_wait(5)
-                    ct = dv.find_element_by_xpath("//*[@id=\"mount_0_0\"]/div/div[1]/div[1]/div[3]/div/div/div[1]/div[1]/div[2]/div/div/div/div/div/div[2]/div/div[2]/div/div[1]/div[1]/div[3]/div/div[1]")
-                    ct.click()
-                    time.sleep(2)
-                    if ct.text == "Message":
-                        mouse.position = (950, 650)
-                        mouse.click(Button.left, 2)
-                        time.sleep(0.5)
-                        keyboard.type(random.choice(messages))
-                        dv.find_element_by_xpath("//*[@id=\"mount_0_0\"]/div/div[1]/div[1]/div[4]/div/div/div[1]/div/div[2]/div/div/div/div[4]/div[2]/div").click()
-                    else:
-                        mouse.position = (950, 475)
-                        mouse.click(Button.left, 2)
-                        time.sleep(0.5)
-                        keyboard.type(email)
-                        mouse.position = (950, 650)
-                        mouse.click(Button.left, 2)
-                        time.sleep(0.5)
-                        keyboard.type(random.choice(messages))
-                        dv.find_element_by_xpath("//*[@id=\"mount_0_0\"]/div/div[1]/div[1]/div[4]/div/div/div[1]/div/div[2]/div/div/div/div[4]/div[2]/span/div").click()
+                    try:
+                        processed_links.append(MAIN_LINK + listing['href'])
+                        namesFile.write(MAIN_LINK + listing['href'] + "\n")
+                        dv.execute_script('window.open(arguments[0]);', MAIN_LINK + listing['href'])
+                        new_window = [window for window in dv.window_handles if window != current_window][0]
+                        dv.switch_to.window(new_window)
+                        dv.implicitly_wait(5)
+                        ct = dv.find_element_by_xpath("//*[@id=\"mount_0_0\"]/div/div[1]/div[1]/div[3]/div/div/div[1]/div[1]/div[2]/div/div/div/div/div/div[2]/div/div[2]/div/div[1]/div[1]/div[3]/div/div[1]")
+                        ct.click()
+                        time.sleep(random.randint(2,4))
+                        if ct.text == "Message":
+                            mouse.position = (950, 650)
+                            mouse.click(Button.left, 2)
+                            time.sleep(1)
+                            keyboard.type(random.choice(messages))
+                            time.sleep(1)
+                            dv.find_element_by_xpath("//*[@id=\"mount_0_0\"]/div/div[1]/div[1]/div[4]/div/div/div[1]/div/div[2]/div/div/div/div[4]/div[2]/div").click()
+                        else:
+                            mouse.position = (950, 475)
+                            mouse.click(Button.left, 2)
+                            time.sleep(1)
+                            keyboard.type(email)
+                            time.sleep(1)
+                            mouse.position = (900, 550)
+                            mouse.click(Button.left, 2)
+                            time.sleep(1)
+                            keyboard.type(phone)
+                            time.sleep(1)
+                            mouse.position = (950, 650)
+                            mouse.click(Button.left, 2)
+                            time.sleep(1)
+                            keyboard.type(random.choice(messages))
+                            time.sleep(1)
+                            dv.find_element_by_xpath("//*[@id=\"mount_0_0\"]/div/div[1]/div[1]/div[4]/div/div/div[1]/div/div[2]/div/div/div/div[4]/div[2]/span/div").click()
 
-                    time.sleep(7)
-                    dv.close()
-                    dv.switch_to.window(current_window)
+                        time.sleep(random.randint(6,10))
+                        dv.close()
+                        dv.switch_to.window(current_window)
+                    except AttributeError:
+                        dv.close()
+                        dv.switch_to.window(current_window)
             else:
                 pass
 
@@ -129,7 +141,7 @@ if __name__ == "__main__":
                 processed_links = []
                 pass
         with open("links.txt", "a") as links_file:
-            messagingProcedure(dv, messages, credentials[0], links_file, processed_links)
+            messagingProcedure(dv, messages, credentials[2], credentials[3], links_file, processed_links)
 
         killb(dv)
     except KeyboardInterrupt:
