@@ -55,7 +55,7 @@ def login(dv, username, password):
 
 
 # messaging procedure
-def messagingProcedure(dv, messages, email, phone, namesFile, processed_links):
+def messagingProcedure(dv, messages, namesFile, processed_links):
     mouse = pynput.mouse.Controller()
     keyboard = pynput.keyboard.Controller()
 
@@ -95,23 +95,6 @@ def messagingProcedure(dv, messages, email, phone, namesFile, processed_links):
                             keyboard.type(random.choice(messages))
                             time.sleep(1)
                             dv.find_element_by_xpath("//*[@id=\"mount_0_0\"]/div/div[1]/div[1]/div[4]/div/div/div[1]/div/div[2]/div/div/div/div[4]/div[2]/div").click()
-                        else:
-                            mouse.position = (950, 475)
-                            mouse.click(Button.left, 2)
-                            time.sleep(1)
-                            keyboard.type(email)
-                            time.sleep(1)
-                            mouse.position = (900, 550)
-                            mouse.click(Button.left, 2)
-                            time.sleep(1)
-                            keyboard.type(phone)
-                            time.sleep(1)
-                            mouse.position = (950, 650)
-                            mouse.click(Button.left, 2)
-                            time.sleep(1)
-                            keyboard.type(random.choice(messages))
-                            time.sleep(1)
-                            dv.find_element_by_xpath("//*[@id=\"mount_0_0\"]/div/div[1]/div[1]/div[4]/div/div/div[1]/div/div[2]/div/div/div/div[4]/div[2]/span/div").click()
 
                         time.sleep(random.randint(6,10))
                         dv.close()
@@ -141,7 +124,7 @@ if __name__ == "__main__":
                 processed_links = []
                 pass
         with open("links.txt", "a") as links_file:
-            messagingProcedure(dv, messages, credentials[2], credentials[3], links_file, processed_links)
+            messagingProcedure(dv, messages, links_file, processed_links)
 
         killb(dv)
     except KeyboardInterrupt:
