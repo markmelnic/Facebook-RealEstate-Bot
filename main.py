@@ -51,7 +51,7 @@ def login(dv, username, password):
 
 
 # messaging procedure
-def messagingProcedure(dv, messages, namesFile, processed_links):
+def messagingProcedure(dv, messages, links_file, processed_links):
     mouse = pynput.mouse.Controller()
     keyboard = pynput.keyboard.Controller()
 
@@ -76,15 +76,15 @@ def messagingProcedure(dv, messages, namesFile, processed_links):
                 if not MAIN_LINK + listing['href'] in processed_links:
                     try:
                         processed_links.append(MAIN_LINK + listing['href'])
-                        namesFile.write(MAIN_LINK + listing['href'] + "\n")
+                        links_file.write(MAIN_LINK + listing['href'] + "\n")
                         dv.execute_script('window.open(arguments[0]);', MAIN_LINK + listing['href'])
                         new_window = [window for window in dv.window_handles if window != current_window][0]
                         dv.switch_to.window(new_window)
                         dv.implicitly_wait(5)
-                        ct = dv.find_element_by_xpath("//*[@id=\"mount_0_0\"]/div/div[1]/div[1]/div[3]/div/div/div[1]/div[1]/div[2]/div/div/div/div/div/div[2]/div/div[2]/div/div[1]/div[1]/div[3]/div/div[1]")
-                        ct.click()
+                        contact_button = dv.find_element_by_xpath("//*[@id=\"mount_0_0\"]/div/div[1]/div[1]/div[3]/div/div/div[1]/div[1]/div[2]/div/div/div/div/div/div[2]/div/div[2]/div/div[1]/div[1]/div[3]/div/div[1]")
+                        contact_button.click()
                         time.sleep(random.randint(2,4))
-                        if ct.text == "Message":
+                        if contact_button.text == "Message":
                             mouse.position = (950, 650)
                             mouse.click(Button.left, 2)
                             time.sleep(1)
@@ -104,13 +104,13 @@ def messagingProcedure(dv, messages, namesFile, processed_links):
 
 if __name__ == "__main__":
     try:
-        with open("message.txt", "r") as msgFile:
-            messages = msgFile.read().splitlines()
+        with open("message.txt", "r") as msg_file:
+            messages = msg_file.read().splitlines()
         dv = boot()
 
-        with open("login_credentials.txt", "r", newline = '') as credsFile:
-            credentials = credsFile.read().splitlines()
-        login(dv, credentials[0], credentials[1])
+        with open("login_credentials.txt", "r", newline = '') as creds_file:
+            creds = creds_file.read().splitlines()
+        login(dv, creds[0], creds[1])
 
         try:
             with open("links.txt", "r") as links_file:
