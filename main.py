@@ -116,9 +116,9 @@ def marketplace(dv, messages, links_file, processed_links):
                         if contact_button.text == "Message":
                             mouse.position = (950, 650)
                             mouse.click(Button.left, 2)
-                            time.sleep(1)
+                            time.sleep(random.randint(1, 2))
                             keyboard.type(random.choice(messages))
-                            time.sleep(1)
+                            time.sleep(random.randint(1, 2))
                             dv.find_element_by_xpath(
                                 '//*[@id="mount_0_0"]/div/div[1]/div[1]/div[4]/div/div/div[1]/div/div[2]/div/div/div/div[4]/div[2]/div'
                             ).click()
@@ -135,7 +135,6 @@ def marketplace(dv, messages, links_file, processed_links):
 
 # groups messaging
 def groups(dv, messages, links_file, processed_links):
-    mouse = pynput.mouse.Controller()
     keyboard = pynput.keyboard.Controller()
 
     current_window = dv.current_window_handle
@@ -158,7 +157,7 @@ def groups(dv, messages, links_file, processed_links):
             dv.get(group)
             WebDriverWait(dv, 20).until(EC.visibility_of_all_elements_located)
             time.sleep(5)
-            
+
             user_counter = 0
             while True:
                 if user_counter == 20:
@@ -185,17 +184,17 @@ def groups(dv, messages, links_file, processed_links):
                                 ][0]
                                 dv.switch_to.window(new_window)
                                 time.sleep(random.randint(4, 8))
-                                
+
                                 contact_button = dv.find_element_by_xpath(
                                     '//*[@id="mount_0_0"]/div/div[1]/div[1]/div[3]/div/div/div[1]/div[1]/div[1]/div[2]/div/div/div[2]/div/div/div/div[1]/div/div'
                                 )
                                 contact_button.click()
-                                
+
                                 time.sleep(random.randint(2, 3))
                                 keyboard.type(random.choice(messages))
                                 time.sleep(random.randint(2, 3))
-                                #keyboard.press(pynput.keyboard.Key.enter)
-                                
+                                keyboard.press(pynput.keyboard.Key.enter)
+
                                 time.sleep(random.randint(6, 10))
                                 dv.close()
                                 dv.switch_to.window(current_window)
