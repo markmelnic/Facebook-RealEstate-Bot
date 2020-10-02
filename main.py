@@ -107,7 +107,7 @@ def marketplace(dv, messages, links_file, processed_links):
                             if window != current_window
                         ][0]
                         dv.switch_to.window(new_window)
-                        dv.implicitly_wait(5)
+                        time.sleep(random.randint(4, 8))
                         contact_button = dv.find_element_by_xpath(
                             '//*[@id="mount_0_0"]/div/div[1]/div[1]/div[3]/div/div/div[1]/div[1]/div[2]/div/div/div/div/div/div[2]/div/div[2]/div/div[1]/div[1]/div[3]/div/div[1]'
                         )
@@ -159,36 +159,49 @@ def groups(dv, messages, links_file, processed_links):
             WebDriverWait(dv, 20).until(EC.visibility_of_all_elements_located)
             time.sleep(5)
             
+            user_counter = 0
             while True:
+                if user_counter == 20:
+                    break
+                else:
+                    user_counter += 1
+                    page_body = dv.find_element_by_xpath("/html/body")
+                    page_body.send_keys(Keys.PAGE_DOWN)
                 soup = BeautifulSoup(dv.page_source, "html.parser")
                 users = soup.find_all("a")
                 for user in users:
-                    if (user["role"] == "link") and ("/user/" in user["href"]):
-                        try:
-                            processed_links.append(MAIN_LINK + user["href"])
-                            links_file.write(MAIN_LINK + user["href"] + "\n")
-                            dv.execute_script(
-                                "window.open(arguments[0]);", MAIN_LINK + user["href"]
-                            )
-                            new_window = [
-                                window
-                                for window in dv.window_handles
-                                if window != current_window
-                            ][0]
-                            dv.switch_to.window(new_window)
-                            dv.implicitly_wait(5)
-                            
-                            contact_button = dv.find_element_by_xpath(
-                                '//*[@id="mount_0_0"]/div/div[1]/div[1]/div[3]/div/div/div[1]/div[1]/div[1]/div[2]/div/div/div[2]/div/div/div/div[1]/div/div'
-                            )
-                            contact_button.click()
-                            
-                            time.sleep(random.randint(6, 10))
-                            dv.close()
-                            dv.switch_to.window(current_window)
-                        except selenium.common.exceptions.NoSuchElementException:
-                            dv.close()
-                            dv.switch_to.window(current_window)
+                    if not MAIN_LINK + user["href"] in processed_links:
+                        if (user["role"] == "link") and ("/user/" in user["href"]):
+                            try:
+                                processed_links.append(MAIN_LINK + user["href"])
+                                links_file.write(MAIN_LINK + user["href"] + "\n")
+                                dv.execute_script(
+                                    "window.open(arguments[0]);", MAIN_LINK + user["href"]
+                                )
+                                new_window = [
+                                    window
+                                    for window in dv.window_handles
+                                    if window != current_window
+                                ][0]
+                                dv.switch_to.window(new_window)
+                                time.sleep(random.randint(4, 8))
+                                
+                                contact_button = dv.find_element_by_xpath(
+                                    '//*[@id="mount_0_0"]/div/div[1]/div[1]/div[3]/div/div/div[1]/div[1]/div[1]/div[2]/div/div/div[2]/div/div/div/div[1]/div/div'
+                                )
+                                contact_button.click()
+                                
+                                time.sleep(random.randint(2, 3))
+                                keyboard.type(random.choice(messages))
+                                time.sleep(random.randint(2, 3))
+                                #keyboard.press(pynput.keyboard.Key.enter)
+                                
+                                time.sleep(random.randint(6, 10))
+                                dv.close()
+                                dv.switch_to.window(current_window)
+                            except selenium.common.exceptions.NoSuchElementException:
+                                dv.close()
+                                dv.switch_to.window(current_window)
 
 
 if __name__ == "__main__":
