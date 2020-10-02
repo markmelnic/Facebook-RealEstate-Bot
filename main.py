@@ -153,9 +153,42 @@ def groups(dv, messages, links_file, processed_links):
         for url in urls
         if (url["role"] == "link") and ("https://www.facebook.com/groups/" in url["href"])
     ]
-    for g in list(dict.fromkeys(groups)):
-        if not g == None:
-            pass
+    for group in list(dict.fromkeys(groups)):
+        if not group == None:
+            dv.get(group)
+            WebDriverWait(dv, 20).until(EC.visibility_of_all_elements_located)
+            time.sleep(5)
+            
+            while True:
+                soup = BeautifulSoup(dv.page_source, "html.parser")
+                users = soup.find_all("a")
+                for user in users:
+                    if (user["role"] == "link") and ("/user/" in user["href"]):
+                        try:
+                            processed_links.append(MAIN_LINK + user["href"])
+                            links_file.write(MAIN_LINK + user["href"] + "\n")
+                            dv.execute_script(
+                                "window.open(arguments[0]);", MAIN_LINK + user["href"]
+                            )
+                            new_window = [
+                                window
+                                for window in dv.window_handles
+                                if window != current_window
+                            ][0]
+                            dv.switch_to.window(new_window)
+                            dv.implicitly_wait(5)
+                            
+                            contact_button = dv.find_element_by_xpath(
+                                '//*[@id="mount_0_0"]/div/div[1]/div[1]/div[3]/div/div/div[1]/div[1]/div[1]/div[2]/div/div/div[2]/div/div/div/div[1]/div/div'
+                            )
+                            contact_button.click()
+                            
+                            time.sleep(random.randint(6, 10))
+                            dv.close()
+                            dv.switch_to.window(current_window)
+                        except selenium.common.exceptions.NoSuchElementException:
+                            dv.close()
+                            dv.switch_to.window(current_window)
 
 
 if __name__ == "__main__":
