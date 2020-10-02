@@ -204,6 +204,7 @@ def groups(dv, messages, links_file, processed_links):
 
 
 if __name__ == "__main__":
+    task = input("Would you like to go through Groups or Marketplace? (G/M) - ")
     try:
         with open("message.txt", "r") as msg_file:
             messages = msg_file.read().splitlines()
@@ -221,8 +222,10 @@ if __name__ == "__main__":
                 processed_links = []
                 pass
         with open("links.txt", "a") as links_file:
-            # marketplace(dv, messages, links_file, processed_links)
-            groups(dv, messages, links_file, processed_links)
+            if task.lower() == 'g':
+                groups(dv, messages, links_file, processed_links)
+            elif task.lower() == 'm':
+                marketplace(dv, messages, links_file, processed_links)
 
         killb(dv)
     except KeyboardInterrupt:
