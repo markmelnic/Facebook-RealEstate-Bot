@@ -15,6 +15,7 @@ from selenium.webdriver.support import expected_conditions as EC
 MAIN_LINK = "https://www.facebook.com"
 LOGIN_LINK = "https://www.facebook.com/login/"
 MARKETPLACE_LINK = "https://www.facebook.com/marketplace/category/propertyrentals/"
+GROUPS_LINK = "https://www.facebook.com/groups/feed/"
 
 # driver boot procedure
 def boot():
@@ -41,21 +42,35 @@ def login(dv, username, password):
     dv.get(LOGIN_LINK)
 
     # username
-    username = dv.find_element_by_name("email")
+    user_field = dv.find_element_by_name("email")
     for char in username:
-        username.send_keys(char)
+        user_field.send_keys(char)
 
     # password
-    password = dv.find_element_by_name("pass")
+    password_field = dv.find_element_by_name("pass")
     for char in password:
-        password.send_keys(char)
+        password_field.send_keys(char)
 
     # sign in
     dv.find_element_by_name("login").click()
 
 
-# messaging procedure
-def messagingProcedure(dv, messages, links_file, processed_links):
+# groups url formatter
+def url_formatter(url_list):
+    try:
+        int(url_list[4])
+    except ValueError:
+        return
+
+    url = ''
+    for el in url_list:
+        url += el + "/"
+    url += "members"
+    return url
+
+
+# marketplace messaging
+def marketplace(dv, messages, links_file, processed_links):
     mouse = pynput.mouse.Controller()
     keyboard = pynput.keyboard.Controller()
 
@@ -118,6 +133,31 @@ def messagingProcedure(dv, messages, links_file, processed_links):
                 pass
 
 
+# groups messaging
+def groups(dv, messages, links_file, processed_links):
+    mouse = pynput.mouse.Controller()
+    keyboard = pynput.keyboard.Controller()
+
+    current_window = dv.current_window_handle
+
+    time.sleep(3)
+    dv.get(GROUPS_LINK)
+
+    WebDriverWait(dv, 20).until(EC.visibility_of_all_elements_located)
+    time.sleep(5)
+
+    soup = BeautifulSoup(dv.page_source, "html.parser")
+    urls = soup.find_all("a")
+    groups = [
+        url_formatter(url["href"].split("/")[:5])
+        for url in urls
+        if (url["role"] == "link") and ("https://www.facebook.com/groups/" in url["href"])
+    ]
+    for g in list(dict.fromkeys(groups)):
+        if not g == None:
+            pass
+
+
 if __name__ == "__main__":
     try:
         with open("message.txt", "r") as msg_file:
@@ -136,7 +176,8 @@ if __name__ == "__main__":
                 processed_links = []
                 pass
         with open("links.txt", "a") as links_file:
-            messagingProcedure(dv, messages, links_file, processed_links)
+            # marketplace(dv, messages, links_file, processed_links)
+            groups(dv, messages, links_file, processed_links)
 
         killb(dv)
     except KeyboardInterrupt:
