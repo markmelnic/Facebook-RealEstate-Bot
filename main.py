@@ -62,7 +62,7 @@ def url_formatter(url_list):
     except ValueError:
         return
 
-    url = ''
+    url = ""
     for el in url_list:
         url += el + "/"
     url += "members"
@@ -150,7 +150,8 @@ def groups(dv, messages, links_file, processed_links):
     groups = [
         url_formatter(url["href"].split("/")[:5])
         for url in urls
-        if (url["role"] == "link") and ("https://www.facebook.com/groups/" in url["href"])
+        if (url["role"] == "link")
+        and ("https://www.facebook.com/groups/" in url["href"])
     ]
     for group in list(dict.fromkeys(groups)):
         if not group == None:
@@ -175,7 +176,8 @@ def groups(dv, messages, links_file, processed_links):
                                 processed_links.append(MAIN_LINK + user["href"])
                                 links_file.write(MAIN_LINK + user["href"] + "\n")
                                 dv.execute_script(
-                                    "window.open(arguments[0]);", MAIN_LINK + user["href"]
+                                    "window.open(arguments[0]);",
+                                    MAIN_LINK + user["href"],
                                 )
                                 new_window = [
                                     window
@@ -222,9 +224,9 @@ if __name__ == "__main__":
                 processed_links = []
                 pass
         with open("links.txt", "a") as links_file:
-            if task.lower() == 'g':
+            if task.lower() == "g":
                 groups(dv, messages, links_file, processed_links)
-            elif task.lower() == 'm':
+            elif task.lower() == "m":
                 marketplace(dv, messages, links_file, processed_links)
 
         killb(dv)
